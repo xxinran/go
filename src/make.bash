@@ -143,7 +143,7 @@ rm -f ./runtime/runtime_defs.go
 
 # Finally!  Run the build.
 
-verbose=false
+verbose=true
 vflag=""
 if [ "$1" = "-v" ]; then
 	verbose=true

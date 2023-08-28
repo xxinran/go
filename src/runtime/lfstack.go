@@ -39,15 +39,21 @@ func (head *lfstack) push(node *lfnode) {
 
 func (head *lfstack) pop() unsafe.Pointer {
 	for {
-		old := atomic.Load64((*uint64)(head))
+		old := atomic.Load64((*uint64)(head)) // old is uint64
 		if old == 0 {
 			return nil
 		}
 		node := lfstackUnpack(old)
 		next := atomic.Load64(&node.next)
+		// shared_cacheline_demote(unsafe.Pointer(&old), unsafe.Sizeof(old))
+		// shared_cacheline_demote(unsafe.Pointer(&next), unsafe.Sizeof(next))
 		if atomic.Cas64((*uint64)(head), old, next) {
+			//shared_cacheline_demote(unsafe.Pointer(head), unsafe.Sizeof((*uint64)(head)))
+			// shared_cacheline_demote(unsafe.Pointer(&old), unsafe.Sizeof(old))
+			// shared_cacheline_demote(unsafe.Pointer(&next), unsafe.Sizeof(next))
 			return unsafe.Pointer(node)
 		}
+		//shared_cacheline_demote(unsafe.Pointer(head), unsafe.Sizeof((*uint64)(head)))
 	}
 }
 
@@ -73,5 +79,5 @@ func lfstackPack(node *lfnode, cnt uintptr) uint64 {
 }
 
 func lfstackUnpack(val uint64) *lfnode {
-	return (*lfnode)(taggedPointer(val).pointer())
+	return (*lfnode)(taggedPointer(val).pointer())    // (taggedPointer(val).pointer()) is unsafe.Pointer
 }

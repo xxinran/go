@@ -115,3 +115,6 @@ func StoreReluintptr(ptr *uintptr, val uintptr)
 //
 // NO go:noescape annotation; see atomic_pointer.go.
 func StorepNoWB(ptr unsafe.Pointer, val unsafe.Pointer)
+
+//go:noescape
+func Cldemote(addr unsafe.Pointer)
