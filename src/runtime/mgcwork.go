@@ -353,6 +353,8 @@ func getempty() *workbuf {
 	var b *workbuf
 	if work.empty != 0 {
 		b = (*workbuf)(work.empty.pop())
+		// println(work.empty)
+		shared_cacheline_demote(unsafe.Pointer(&work.empty), unsafe.Sizeof(work.empty))
 		if b != nil {
 			b.checkempty()
 		}
@@ -408,6 +410,7 @@ func getempty() *workbuf {
 func putempty(b *workbuf) {
 	b.checkempty()
 	work.empty.push(&b.node)
+	shared_cacheline_demote(unsafe.Pointer(&work.empty), unsafe.Sizeof(work.empty))
 }
 
 // putfull puts the workbuf on the work.full list for the GC.
@@ -486,4 +489,27 @@ func freeSomeWbufs(preemptible bool) bool {
 	more := !work.wbufSpans.free.isEmpty()
 	unlock(&work.wbufSpans.lock)
 	return more
+}
+
+func shared_cacheline_demote(start unsafe.Pointer, size uintptr){
+	cache_line_base := unsafe.Pointer(uintptr(start) &^ 0x3F)
+
+	//println("start: ", cache_line_base)
+	//println("size: ", size)
+
+	i := 1
+    for {
+		//cache_line_base = cache_line_base & ~0x3F
+		atomic.Cldemote(cache_line_base)
+        // next cacheline start size
+        cache_line_base = unsafe.Add(cache_line_base, 64)
+		//cache_line_base = *(*int)(unsafe.Pointer(uintptr(cache_line_base) + 64))
+		// println("new cache line base: ", cache_line_base)
+		// println("limit: ", unsafe.Add(start, size))
+		// println("demote: ", i)
+		i++
+		if uintptr(cache_line_base) > uintptr(unsafe.Add(start, size)) {
+		 	break
+		}
+    } 
 }

@@ -223,3 +223,9 @@ TEXT ·And(SB), NOSPLIT, $0-12
 	LOCK
 	ANDL	BX, (AX)
 	RET
+
+// func Cldemote(addr unsafe.Pointer)
+TEXT ·Cldemote(SB), NOSPLIT, $0-8
+    MOVQ	cldemoteptr+0(FP), AX
+	CLDEMOTE 0(AX)
+    RET
