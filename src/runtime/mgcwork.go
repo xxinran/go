@@ -354,7 +354,7 @@ func getempty() *workbuf {
 	if work.empty != 0 {
 		b = (*workbuf)(work.empty.pop())
 		// println(work.empty)
-		shared_cacheline_demote(unsafe.Pointer(&work.empty), unsafe.Sizeof(work.empty))
+		//shared_cacheline_demote(unsafe.Pointer(&work.empty), unsafe.Sizeof(work.empty))
 		if b != nil {
 			b.checkempty()
 		}
@@ -410,7 +410,7 @@ func getempty() *workbuf {
 func putempty(b *workbuf) {
 	b.checkempty()
 	work.empty.push(&b.node)
-	shared_cacheline_demote(unsafe.Pointer(&work.empty), unsafe.Sizeof(work.empty))
+	//shared_cacheline_demote(unsafe.Pointer(&work.empty), unsafe.Sizeof(work.empty))
 }
 
 // putfull puts the workbuf on the work.full list for the GC.

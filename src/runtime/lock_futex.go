@@ -58,7 +58,9 @@ func lock2(l *mutex) {
 
 	// Speculative grab for lock.
 	v := atomic.Xchg(key32(&l.key), mutex_locked)
+	//shared_cacheline_demote(unsafe.Pointer(&l.key), unsafe.Sizeof(l.key))
 	if v == mutex_unlocked {
+		shared_cacheline_demote(unsafe.Pointer(&l.key), unsafe.Sizeof(l.key))
 		return
 	}
 
@@ -82,6 +84,7 @@ func lock2(l *mutex) {
 		for i := 0; i < spin; i++ {
 			for l.key == mutex_unlocked {
 				if atomic.Cas(key32(&l.key), mutex_unlocked, wait) {
+					//shared_cacheline_demote(unsafe.Pointer(&l.key), unsafe.Sizeof(l.key))
 					return
 				}
 			}
@@ -92,6 +95,7 @@ func lock2(l *mutex) {
 		for i := 0; i < passive_spin; i++ {
 			for l.key == mutex_unlocked {
 				if atomic.Cas(key32(&l.key), mutex_unlocked, wait) {
+					//shared_cacheline_demote(unsafe.Pointer(&l.key), unsafe.Sizeof(l.key))
 					return
 				}
 			}
@@ -100,6 +104,7 @@ func lock2(l *mutex) {
 
 		// Sleep.
 		v = atomic.Xchg(key32(&l.key), mutex_sleeping)
+		//shared_cacheline_demote(unsafe.Pointer(&l.key), unsafe.Sizeof(l.key))
 		if v == mutex_unlocked {
 			return
 		}
