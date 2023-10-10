@@ -42,6 +42,8 @@ var X86 struct {
 	HasSSSE3     bool
 	HasSSE41     bool
 	HasSSE42     bool
+	HasCLDEMOTE  bool
+	Ecx7         uint32
 	_            CacheLinePad
 }
 

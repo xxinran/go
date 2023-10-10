@@ -9,6 +9,7 @@ package runtime
 import (
 	"runtime/internal/atomic"
 	"unsafe"
+	"internal/cpu"
 )
 
 // This implementation depends on OS-specific implementations of
@@ -60,7 +61,15 @@ func lock2(l *mutex) {
 	v := atomic.Xchg(key32(&l.key), mutex_locked)
 	//shared_cacheline_demote(unsafe.Pointer(&l.key), unsafe.Sizeof(l.key))
 	if v == mutex_unlocked {
-		shared_cacheline_demote(unsafe.Pointer(&l.key), unsafe.Sizeof(l.key))
+		if (GOARCH == "386" || GOARCH == "amd64") && cpu.X86.HasCLDEMOTE {
+			//print("cldemote supported")
+			shared_cacheline_demote(unsafe.Pointer(&l.key), unsafe.Sizeof(l.key))
+		} else {
+			//print("cldemote unsupported")
+			//print(GOARCH)
+			//print(cpu.X86.HasCLDEMOTE)
+			//print(cpu.X86.Ecx7)
+		}
 		return
 	}
 
